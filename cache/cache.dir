@@ -1,0 +1,5 @@
+'User: what is the count of rows for day = Saturday and time = Dinner\n5301f7585b0fc39f5c043dc998375cd3b490398dd9d6ca21fb5c431058519fdf', (2560, 1070)
+'User: what is the sum of rows for day = Saturday and time = Dinner\n5301f7585b0fc39f5c043dc998375cd3b490398dd9d6ca21fb5c431058519fdf', (4096, 1064)
+'User: what is the sum of tips for day = Saturday and time = Dinner\n5301f7585b0fc39f5c043dc998375cd3b490398dd9d6ca21fb5c431058519fdf', (5632, 1100)
+'User: what is the score of Finland601501589a6b7b6b1ed5d0f3952b7b92718ef3cb1fd496f2dc5295c8c73fce86', (7168, 954)
+'User: give me the highest credit amount of Dell274bc36ab3bb2b5d1fe719dee4550aefeca9d1a7efff949608385f5367173c63', (8192, 1145)
