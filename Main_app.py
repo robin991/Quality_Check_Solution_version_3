@@ -155,9 +155,20 @@ def chat_bot_Pandasai_api() -> None:
 
     return None 
 
-def chat_bot_llangchain_openapi():
+def chat_bot_llangchain_openapi() -> None:
 
     DB_FAISS_PATH = "vectorestore/db_faiss"
+
+    check_file = os.path.isfile('.env')
+
+    # checking API Key info ( for both local run and for streamlit)
+    if check_file:
+        load_dotenv()
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    else:
+        openai_api_key = st.secrets["API_KEY"]
+    
 
     # create a temporary file object
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -183,7 +194,7 @@ def chat_bot_llangchain_openapi():
     db.save_local(DB_FAISS_PATH)
 
     # load llm model . it will be passed in conversation retrieval chain
-    llm = ChatOpenAI(temperature=0.0,model_name='gpt-3.5-turbo')
+    llm = ChatOpenAI(temperature=0.0,model_name='gpt-3.5-turbo', openai_api_key=openai_api_key)
 
     #chain call
     chain = ConversationalRetrievalChain.from_llm(llm=llm, retriever=db.as_retriever())
