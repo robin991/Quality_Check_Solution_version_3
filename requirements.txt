@@ -5,3 +5,4 @@ pandasai
 python-dotenv
 streamlit
 streamlit_chat
+bs4
