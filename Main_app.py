@@ -66,9 +66,9 @@ def clear_chat() -> None:
     st.session_state['history'] = []
 
     
-    st.session_state['generated'] = []
+    st.session_state['generated'] = ['Hi I am Rio GPT. Your friendly neighbourhood genrative-AI powered conversational assistant.']
     
-    st.session_state['past'] = []
+    st.session_state['past'] = ['Hey!']
 
 def read_file(file_name : str) -> pd.DataFrame: 
     # Function to read file and return and dataframe and Fileuploader object
@@ -202,7 +202,7 @@ def chat_bot_llangchain_openapi(uploaded_file) -> None:
 
     db = FAISS.from_documents(data,embeddings)
     # save the db to the path
-    #db.save_local(DB_FAISS_PATH)
+    db.save_local(DB_FAISS_PATH)
 
     # load llm model . it will be passed in conversation retrieval chain
     llm = ChatOpenAI(temperature=0.0,model_name='gpt-3.5-turbo', openai_api_key=openai_api_key)
@@ -280,54 +280,59 @@ st.divider()
 col1, col2 = st.columns(2)
 
 with col1 :
-    #Read file from column  and  File uploader object
-    st.session_state['df'],st.session_state['File_uploader_object'] = read_file(file_name = "File1")
+    # choose solution
+    choose_option = st.selectbox("***Choose chat solution:***", ('Chat with excel(Single query)', 'Chat with excel(Conversation Chain)'))
+
     
-    choose_option = st.radio("***Choose chat solution:***", ['Chat with excel(PandasAI)', 'Chat with excel(Conversation Chain)'])
+    
+    if choose_option == 'Chat with excel(Single query)' or  choose_option == 'Chat with excel(Conversation Chain)':
 
-    if not st.session_state['df'].empty:
-        
-        # assign to session state
-        uploaded_file = st.session_state['File_uploader_object']
+        #Read file from column  and  File uploader object
+        st.session_state['df'],st.session_state['File_uploader_object'] = read_file(file_name = "File1")
 
-        with st.expander('Data Display'):
-            # Function call : display uploaded file on application
-            display_uploaded_data()
+        if not st.session_state['df'].empty:
+          
+            # assign to session state
+            uploaded_file = st.session_state['File_uploader_object']
 
-        with st.expander("Data Description"):
-            # Function call : display basic details regarding the dataset
-            display_uploaded_data_info()
+            with st.expander('Data Display'):
+                # Function call : display uploaded file on application
+                display_uploaded_data()
 
-        with st.expander("BAU Report"):
-            # Function call : dispalay regular BAU analysis
-            df = st.session_state['df']
+            with st.expander("Data Description"):
+                # Function call : display basic details regarding the dataset
+                display_uploaded_data_info()
 
-            # resetting the date column
-            df["Date"] = pd.to_datetime(df["Date"])
-            st.session_state['df'] =df
+            with st.expander("BAU Report"):
+                # Function call : dispalay regular BAU analysis
+                df = st.session_state['df']
 
-            Table = Table_creation(st.session_state['df'])
-            
-            st.subheader("Summary Report:")
-            cola, colb, colc = st.columns(3)
-            cola.metric("Total Spend", '$ {:10,d}'.format(df["Spend"].sum()))
-            colb.metric("Total Credit", '# {:10,d}'.format(df["Credit amount"].sum()))
-            colc.metric("Total Redemption",'# {:10,d}'.format(df["Redemption"].sum()))
-            st.write("Merchant Performance:")
-            num1 , num2 = st.columns(2)
-            num1.dataframe(Table)
-            Table.reset_index(inplace=True)
-            num2.line_chart(Table,x= 'Merchant',y = ['Spend','Credit amount'],)#color = ["#E3242B","#1E2F97"])
-            spend = df.groupby("Date")['Spend'].sum().reset_index()
-            spend.sort_values("Date",inplace=True)
-            st.write("Month Wise:")
-            st.line_chart(spend,x='Date',y='Spend')
-    else:
+                # resetting the date column
+                df["Date"] = pd.to_datetime(df["Date"])
+                st.session_state['df'] =df
 
-        st.error("Kindly Upload your file!")
+                Table = Table_creation(st.session_state['df'])
+                
+                st.subheader("Summary Report:")
+                cola, colb, colc = st.columns(3)
+                cola.metric("Total Spend", '$ {:10,d}'.format(df["Spend"].sum()))
+                colb.metric("Total Credit", '# {:10,d}'.format(df["Credit amount"].sum()))
+                colc.metric("Total Redemption",'# {:10,d}'.format(df["Redemption"].sum()))
+                st.write("Merchant Performance:")
+                num1 , num2 = st.columns(2)
+                num1.dataframe(Table)
+                Table.reset_index(inplace=True)
+                num2.line_chart(Table,x= 'Merchant',y = ['Spend','Credit amount'],)#color = ["#E3242B","#1E2F97"])
+                spend = df.groupby("Date")['Spend'].sum().reset_index()
+                spend.sort_values("Date",inplace=True)
+                st.write("Month Wise:")
+                st.line_chart(spend,x='Date',y='Spend')
+        else:
+
+            st.error("Kindly Upload your file!")
 with col2 :
     
-    if not st.session_state['df'].empty and choose_option == 'Chat with excel(PandasAI)':
+    if not st.session_state['df'].empty and choose_option == 'Chat with excel(Single query)':
         chat_bot_Pandasai_api()
     elif not st.session_state['df'].empty and choose_option == 'Chat with excel(Conversation Chain)':
         chat_bot_llangchain_openapi(st.session_state['File_uploader_object'])

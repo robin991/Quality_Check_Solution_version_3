@@ -705,3 +705,75 @@ result = analyze_data(dfs)
 ModuleNotFoundError("No module named 'faiss.swigfaiss_avx2'")
 2023-09-18 02:14:10 [INFO] Loading faiss.
 2023-09-18 02:14:10 [INFO] Successfully loaded faiss.
+2023-09-20 02:22:20 [INFO] Question: show a graph of spend versus merchant
+2023-09-20 02:22:20 [INFO] Running PandasAI with openai LLM...
+2023-09-20 02:22:20 [INFO] Prompt ID: da8dd03f-875e-4467-82e7-49282ed9296e
+2023-09-20 02:22:34 [INFO] Code generated:
+```
+# TODO import all the dependencies required
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def analyze_data(dfs: list[pd.DataFrame]) -> dict:
+    """
+    Analyze the data
+    1. Prepare: Preprocessing and cleaning data if necessary
+    2. Process: Manipulating data for analysis (grouping, filtering, aggregating, etc.)
+    3. Analyze: Conducting the actual analysis (if the user asks to plot a chart save it to an image in /temp_chart.png and do not show the chart.)
+    4. Output: return a dictionary of:
+    - type (possible values "text", "number", "dataframe", "plot")
+    - value (can be a string, a dataframe or the path of the plot, NOT a dictionary)
+    Example output: { "type": "text", "value": "The average loan amount is $15,000." }
+    """
+    # Prepare
+    df = dfs[0].copy()
+    
+    # Process
+    grouped_df = df.groupby('Merchant')['Spend'].sum().reset_index()
+    
+    # Analyze
+    fig, ax = plt.subplots()
+    ax.bar(grouped_df['Merchant'], grouped_df['Spend'])
+    ax.set_xlabel('Merchant')
+    ax.set_ylabel('Spend')
+    ax.set_title('Spend vs Merchant')
+    plt.xticks(rotation=90)
+    
+    # Save the plot to a file
+    plt.savefig('/temp_chart.png')
+    plt.close(fig)
+    
+    # Output
+    return {"type": "plot", "value": "/temp_chart.png"}
+```
+
+2023-09-20 02:22:34 [INFO] 
+Code running:
+```
+def analyze_data(dfs: list[pd.DataFrame]) ->dict:
+    """
+    Analyze the data
+    1. Prepare: Preprocessing and cleaning data if necessary
+    2. Process: Manipulating data for analysis (grouping, filtering, aggregating, etc.)
+    3. Analyze: Conducting the actual analysis (if the user asks to plot a chart save it to an image in /temp_chart.png and do not show the chart.)
+    4. Output: return a dictionary of:
+    - type (possible values "text", "number", "dataframe", "plot")
+    - value (can be a string, a dataframe or the path of the plot, NOT a dictionary)
+    Example output: { "type": "text", "value": "The average loan amount is $15,000." }
+    """
+    df = dfs[0].copy()
+    grouped_df = df.groupby('Merchant')['Spend'].sum().reset_index()
+    fig, ax = plt.subplots()
+    ax.bar(grouped_df['Merchant'], grouped_df['Spend'])
+    ax.set_xlabel('Merchant')
+    ax.set_ylabel('Spend')
+    ax.set_title('Spend vs Merchant')
+    plt.xticks(rotation=90)
+    plt.savefig('/temp_chart.png')
+    plt.close(fig)
+    return {'type': 'plot', 'value': '/temp_chart.png'}
+        ```
+2023-09-20 02:22:35 [INFO] Answer: {'type': 'plot', 'value': '/temp_chart.png'}
+2023-09-20 02:22:35 [INFO] Executed in: 14.400688886642456s
+2023-09-20 02:42:14 [INFO] error_code=rate_limit_exceeded error_message='Rate limit reached for default-text-embedding-ada-002 in organization org-xh5lJhe0hv2GOIIhkyN0JPX3 on requests per min. Limit: 3 / min. Please try again in 20s. Contact us through our help center at help.openai.com if you continue to have issues. Please add a payment method to your account to increase your rate limit. Visit https://platform.openai.com/account/billing to add a payment method.' error_param=None error_type=requests message='OpenAI API error received' stream_error=False
+2023-09-20 02:42:14 [WARNING] Retrying langchain.embeddings.openai.embed_with_retry.<locals>._embed_with_retry in 4.0 seconds as it raised RateLimitError: Rate limit reached for default-text-embedding-ada-002 in organization org-xh5lJhe0hv2GOIIhkyN0JPX3 on requests per min. Limit: 3 / min. Please try again in 20s. Contact us through our help center at help.openai.com if you continue to have issues. Please add a payment method to your account to increase your rate limit. Visit https://platform.openai.com/account/billing to add a payment method..
