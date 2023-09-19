@@ -54,7 +54,7 @@ def initialize_session_state() -> None:
         st.session_state['history'] = []
 
     if 'generated' not in st.session_state:
-        st.session_state['generated'] = ['Hello, Ask me anything about uploaded file']
+        st.session_state['generated'] = ['Hi I am Rio GPT. Your friendly neighbourhood genrative-AI pwoered conversational assistant.']
     
     if 'past' not in st.session_state:
         st.session_state['past'] = ['Hey! ']
@@ -187,7 +187,7 @@ def chat_bot_llangchain_openapi() -> None:
     # embeddings = HuggingFaceEmbeddings(model_name ="sentence-transformers/all-MiniLM-L6-v2",
     #                                    model_kwargs = {'device' : 'cpu'})
     
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
 
     db = FAISS.from_documents(data,embeddings)
     # save the db to the path
