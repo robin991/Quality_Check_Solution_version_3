@@ -54,10 +54,21 @@ def initialize_session_state() -> None:
         st.session_state['history'] = []
 
     if 'generated' not in st.session_state:
-        st.session_state['generated'] = ['Hi I am Rio GPT. Your friendly neighbourhood genrative-AI pwoered conversational assistant.']
+        st.session_state['generated'] = ['Hi I am Rio GPT. Your friendly neighbourhood genrative-AI powered conversational assistant.']
     
     if 'past' not in st.session_state:
         st.session_state['past'] = ['Hey! ']
+
+def clear_chat() -> None:
+    '''
+    This function will execute when clear button is clicked
+    '''
+    st.session_state['history'] = []
+
+    
+    st.session_state['generated'] = []
+    
+    st.session_state['past'] = []
 
 def read_file(file_name : str) -> pd.DataFrame: 
     # Function to read file and return and dataframe and Fileuploader object
@@ -155,7 +166,7 @@ def chat_bot_Pandasai_api() -> None:
 
     return None 
 
-def chat_bot_llangchain_openapi() -> None:
+def chat_bot_llangchain_openapi(uploaded_file) -> None:
 
     DB_FAISS_PATH = "vectorestore/db_faiss"
 
@@ -191,7 +202,7 @@ def chat_bot_llangchain_openapi() -> None:
 
     db = FAISS.from_documents(data,embeddings)
     # save the db to the path
-    db.save_local(DB_FAISS_PATH)
+    #db.save_local(DB_FAISS_PATH)
 
     # load llm model . it will be passed in conversation retrieval chain
     llm = ChatOpenAI(temperature=0.0,model_name='gpt-3.5-turbo', openai_api_key=openai_api_key)
@@ -218,11 +229,15 @@ def chat_bot_llangchain_openapi() -> None:
             user_input = st.text_input("Query:", placeholder = "Talk to your CSV Data here", key = 'input')
 
             submit_buttom = st.form_submit_button(label ='Send')
+            
 
         if submit_buttom and user_input:
             output = conversational_chat(user_input)
             st.session_state['past'].append(user_input)
             st.session_state['generated'].append(output)
+        
+        st.button("Clear Chat", on_click=clear_chat)
+    
 
     if st.session_state['generated']:
         with response_container:
@@ -315,7 +330,7 @@ with col2 :
     if not st.session_state['df'].empty and choose_option == 'Chat with excel(PandasAI)':
         chat_bot_Pandasai_api()
     elif not st.session_state['df'].empty and choose_option == 'Chat with excel(Conversation Chain)':
-        chat_bot_llangchain_openapi()
+        chat_bot_llangchain_openapi(st.session_state['File_uploader_object'])
     
 
     
