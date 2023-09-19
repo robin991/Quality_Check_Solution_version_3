@@ -301,3 +301,407 @@ result = analyze_data(dfs)
         ```
 2023-09-14 14:47:35 [INFO] Answer: {'type': 'number', 'value': 7.769}
 2023-09-14 14:47:35 [INFO] Executed in: 10.141778707504272s
+2023-09-14 23:44:06 [INFO] Question: give me the highest credit amount of Dell
+2023-09-14 23:44:06 [INFO] Running PandasAI with openai LLM...
+2023-09-14 23:44:06 [INFO] Prompt ID: ed16de03-e815-42ce-a449-16a889ad30a6
+2023-09-14 23:44:17 [INFO] 
+                    Code generated:
+                    ```
+                    # TODO import all the dependencies required
+import pandas as pd
+
+# Analyze the data
+# 1. Prepare: Preprocessing and cleaning data if necessary
+# 2. Process: Manipulating data for analysis (grouping, filtering, aggregating, etc.)
+# 3. Analyze: Conducting the actual analysis (if the user asks to create a chart save it to an image in exports/charts/temp_chart.png and do not show the chart.)
+# 4. Output: return a dictionary of:
+# - type (possible values "text", "number", "dataframe", "plot")
+# - value (can be a string, a dataframe or the path of the plot, NOT a dictionary)
+# Example output: { "type": "text", "value": "The average loan amount is $15,000." }
+def analyze_data(dfs: list[pd.DataFrame]) -> dict:
+    # Filter the dataframe to only include rows where the Merchant is Dell
+    dell_df = dfs[0][dfs[0]['Merchant'] == 'Dell']
+    
+    # Find the highest credit amount in the filtered dataframe
+    highest_credit_amount = dell_df['Credit amount'].max()
+    
+    # Return the result as a dictionary
+    return {"type": "number", "value": highest_credit_amount}
+
+# Declare a result variable
+result = analyze_data(dfs)
+                    ```
+                
+2023-09-14 23:44:17 [INFO] 
+Code running:
+```
+def analyze_data(dfs: list[pd.DataFrame]) ->dict:
+    dell_df = dfs[0][dfs[0]['Merchant'] == 'Dell']
+    highest_credit_amount = dell_df['Credit amount'].max()
+    return {'type': 'number', 'value': highest_credit_amount}
+
+
+result = analyze_data(dfs)
+        ```
+2023-09-14 23:44:17 [INFO] Answer: {'type': 'number', 'value': 900}
+2023-09-14 23:44:17 [INFO] Executed in: 11.624483346939087s
+2023-09-18 00:21:44 [INFO] Question: what is total credit amount
+2023-09-18 00:21:44 [INFO] Running PandasAI with openai LLM...
+2023-09-18 00:21:44 [INFO] Prompt ID: 3ba441a3-4410-41ff-89a4-28b7a3a4a6b6
+2023-09-18 00:21:52 [INFO] 
+                    Code generated:
+                    ```
+                    # TODO import all the dependencies required
+import pandas as pd
+
+# Analyze the data
+# 1. Prepare: Preprocessing and cleaning data if necessary
+# 2. Process: Manipulating data for analysis (grouping, filtering, aggregating, etc.)
+# 3. Analyze: Conducting the actual analysis (if the user asks to create a chart save it to an image in exports/charts/temp_chart.png and do not show the chart.)
+# 4. Output: return a dictionary of:
+# - type (possible values "text", "number", "dataframe", "plot")
+# - value (can be a string, a dataframe or the path of the plot, NOT a dictionary)
+# Example output: { "type": "text", "value": "The average loan amount is $15,000." }
+def analyze_data(dfs: list[pd.DataFrame]) -> dict:
+    # Process
+    total_credit_amount = dfs[0]['Credit amount'].sum()
+    
+    # Output
+    return {"type": "number", "value": total_credit_amount}
+
+# Declare a result variable
+result = analyze_data(dfs)
+                    ```
+                
+2023-09-18 00:21:52 [INFO] 
+Code running:
+```
+def analyze_data(dfs: list[pd.DataFrame]) ->dict:
+    total_credit_amount = dfs[0]['Credit amount'].sum()
+    return {'type': 'number', 'value': total_credit_amount}
+
+
+result = analyze_data(dfs)
+        ```
+2023-09-18 00:21:52 [INFO] Answer: {'type': 'number', 'value': 44810}
+2023-09-18 00:21:52 [INFO] Executed in: 8.859436750411987s
+2023-09-18 00:52:17 [INFO] Question: create a chart of credit amount versus generation
+2023-09-18 00:52:17 [INFO] Running PandasAI with openai LLM...
+2023-09-18 00:52:17 [INFO] Prompt ID: 9ef08c26-1998-477b-b650-996ce71b0922
+2023-09-18 00:52:29 [INFO] 
+                    Code generated:
+                    ```
+                    # TODO import all the dependencies required
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Analyze the data
+# 1. Prepare: Preprocessing and cleaning data if necessary
+# 2. Process: Manipulating data for analysis (grouping, filtering, aggregating, etc.)
+# 3. Analyze: Conducting the actual analysis (if the user asks to create a chart save it to an image in exports/charts/temp_chart.png and do not show the chart.)
+# 4. Output: return a dictionary of:
+# - type (possible values "text", "number", "dataframe", "plot")
+# - value (can be a string, a dataframe or the path of the plot, NOT a dictionary)
+# Example output: { "type": "text", "value": "The average loan amount is $15,000." }
+def analyze_data(dfs: list[pd.DataFrame]) -> dict:
+    # Code goes here (do not add comments)
+    df = dfs[0]
+    
+    # Prepare
+    df['Generation'] = df['Generation'].astype('category')
+    
+    # Analyze
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df['Generation'], df['Credit amount'])
+    plt.xlabel('Generation')
+    plt.ylabel('Credit amount')
+    plt.title('Credit Amount vs Generation')
+    plt.savefig('exports/charts/temp_chart.png')
+    plt.close()
+    
+    # Output
+    return {"type": "plot", "value": "exports/charts/temp_chart.png"}
+
+# Declare a result variable
+result = analyze_data(dfs)
+                    ```
+                
+2023-09-18 00:52:29 [INFO] 
+Code running:
+```
+def analyze_data(dfs: list[pd.DataFrame]) ->dict:
+    df = dfs[0]
+    df['Generation'] = df['Generation'].astype('category')
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df['Generation'], df['Credit amount'])
+    plt.xlabel('Generation')
+    plt.ylabel('Credit amount')
+    plt.title('Credit Amount vs Generation')
+    plt.savefig('exports/charts/temp_chart.png')
+    plt.close()
+    return {'type': 'plot', 'value': 'exports/charts/temp_chart.png'}
+
+
+result = analyze_data(dfs)
+        ```
+2023-09-18 00:52:29 [INFO] Answer: {'type': 'plot', 'value': 'exports/charts/temp_chart.png'}
+2023-09-18 00:52:29 [INFO] Executed in: 12.195284128189087s
+2023-09-18 00:55:02 [INFO] Question: create a chart of credit amount versus generation
+2023-09-18 00:55:02 [INFO] Running PandasAI with openai LLM...
+2023-09-18 00:55:02 [INFO] Prompt ID: 3cd187d0-8267-4f03-a964-25c394561bc5
+2023-09-18 00:55:02 [INFO] Using cached response
+2023-09-18 00:55:02 [INFO] 
+                    Code generated:
+                    ```
+                    # TODO import all the dependencies required
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Analyze the data
+# 1. Prepare: Preprocessing and cleaning data if necessary
+# 2. Process: Manipulating data for analysis (grouping, filtering, aggregating, etc.)
+# 3. Analyze: Conducting the actual analysis (if the user asks to create a chart save it to an image in exports/charts/temp_chart.png and do not show the chart.)
+# 4. Output: return a dictionary of:
+# - type (possible values "text", "number", "dataframe", "plot")
+# - value (can be a string, a dataframe or the path of the plot, NOT a dictionary)
+# Example output: { "type": "text", "value": "The average loan amount is $15,000." }
+def analyze_data(dfs: list[pd.DataFrame]) -> dict:
+    # Code goes here (do not add comments)
+    df = dfs[0]
+    
+    # Prepare
+    df['Generation'] = df['Generation'].astype('category')
+    
+    # Analyze
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df['Generation'], df['Credit amount'])
+    plt.xlabel('Generation')
+    plt.ylabel('Credit amount')
+    plt.title('Credit Amount vs Generation')
+    plt.savefig('exports/charts/temp_chart.png')
+    plt.close()
+    
+    # Output
+    return {"type": "plot", "value": "exports/charts/temp_chart.png"}
+
+# Declare a result variable
+result = analyze_data(dfs)
+                    ```
+                
+2023-09-18 00:55:02 [INFO] 
+Code running:
+```
+def analyze_data(dfs: list[pd.DataFrame]) ->dict:
+    df = dfs[0]
+    df['Generation'] = df['Generation'].astype('category')
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df['Generation'], df['Credit amount'])
+    plt.xlabel('Generation')
+    plt.ylabel('Credit amount')
+    plt.title('Credit Amount vs Generation')
+    plt.savefig('exports/charts/temp_chart.png')
+    plt.close()
+    return {'type': 'plot', 'value': 'exports/charts/temp_chart.png'}
+
+
+result = analyze_data(dfs)
+        ```
+2023-09-18 00:55:02 [INFO] Answer: {'type': 'plot', 'value': 'exports/charts/temp_chart.png'}
+2023-09-18 00:55:02 [INFO] Executed in: 0.2583444118499756s
+2023-09-18 00:56:23 [INFO] Question: create a chart of credit amount versus generation. Also use block=False while ploting
+2023-09-18 00:56:23 [INFO] Running PandasAI with openai LLM...
+2023-09-18 00:56:23 [INFO] Prompt ID: 5890aed8-6580-4deb-baa4-3377a54d68d1
+2023-09-18 00:56:36 [INFO] 
+                    Code generated:
+                    ```
+                    # TODO import all the dependencies required
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Analyze the data
+# 1. Prepare: Preprocessing and cleaning data if necessary
+# 2. Process: Manipulating data for analysis (grouping, filtering, aggregating, etc.)
+# 3. Analyze: Conducting the actual analysis (if the user asks to create a chart save it to an image in exports/charts/temp_chart.png and do not show the chart.)
+# 4. Output: return a dictionary of:
+# - type (possible values "text", "number", "dataframe", "plot")
+# - value (can be a string, a dataframe or the path of the plot, NOT a dictionary)
+# Example output: { "type": "text", "value": "The average loan amount is $15,000." }
+def analyze_data(dfs: list[pd.DataFrame]) -> dict:
+    # Code goes here (do not add comments)
+    df = dfs[0]
+    
+    # Prepare
+    df['Generation'] = df['Generation'].str.replace('+', '')  # Remove '+' from Generation column
+    
+    # Process
+    grouped_df = df.groupby('Generation')['Credit amount'].mean().reset_index()
+    
+    # Analyze
+    plt.figure(figsize=(10, 6))
+    plt.bar(grouped_df['Generation'], grouped_df['Credit amount'])
+    plt.xlabel('Generation')
+    plt.ylabel('Credit Amount')
+    plt.title('Credit Amount vs Generation')
+    plt.savefig('exports/charts/temp_chart.png', bbox_inches='tight')
+    plt.close()
+    
+    # Output
+    return {"type": "plot", "value": "exports/charts/temp_chart.png"}
+
+# Declare a result variable
+result = analyze_data(dfs)
+                    ```
+                
+2023-09-18 00:56:36 [INFO] 
+Code running:
+```
+def analyze_data(dfs: list[pd.DataFrame]) ->dict:
+    df = dfs[0]
+    df['Generation'] = df['Generation'].str.replace('+', '')
+    grouped_df = df.groupby('Generation')['Credit amount'].mean().reset_index()
+    plt.figure(figsize=(10, 6))
+    plt.bar(grouped_df['Generation'], grouped_df['Credit amount'])
+    plt.xlabel('Generation')
+    plt.ylabel('Credit Amount')
+    plt.title('Credit Amount vs Generation')
+    plt.savefig('exports/charts/temp_chart.png', bbox_inches='tight')
+    plt.close()
+    return {'type': 'plot', 'value': 'exports/charts/temp_chart.png'}
+
+
+result = analyze_data(dfs)
+        ```
+2023-09-18 00:56:37 [INFO] Answer: {'type': 'plot', 'value': 'exports/charts/temp_chart.png'}
+2023-09-18 00:56:37 [INFO] Executed in: 13.66981554031372s
+2023-09-18 01:02:34 [INFO] Question: create a chart of credit amount versus generation. Also use block=False while ploting
+2023-09-18 01:02:34 [INFO] Running PandasAI with openai LLM...
+2023-09-18 01:02:34 [INFO] Prompt ID: 2057ca2c-91db-4beb-ba1f-edcadeb615ea
+2023-09-18 01:02:34 [INFO] Using cached response
+2023-09-18 01:02:34 [INFO] 
+                    Code generated:
+                    ```
+                    # TODO import all the dependencies required
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Analyze the data
+# 1. Prepare: Preprocessing and cleaning data if necessary
+# 2. Process: Manipulating data for analysis (grouping, filtering, aggregating, etc.)
+# 3. Analyze: Conducting the actual analysis (if the user asks to create a chart save it to an image in exports/charts/temp_chart.png and do not show the chart.)
+# 4. Output: return a dictionary of:
+# - type (possible values "text", "number", "dataframe", "plot")
+# - value (can be a string, a dataframe or the path of the plot, NOT a dictionary)
+# Example output: { "type": "text", "value": "The average loan amount is $15,000." }
+def analyze_data(dfs: list[pd.DataFrame]) -> dict:
+    # Code goes here (do not add comments)
+    df = dfs[0]
+    
+    # Prepare
+    df['Generation'] = df['Generation'].str.replace('+', '')  # Remove '+' from Generation column
+    
+    # Process
+    grouped_df = df.groupby('Generation')['Credit amount'].mean().reset_index()
+    
+    # Analyze
+    plt.figure(figsize=(10, 6))
+    plt.bar(grouped_df['Generation'], grouped_df['Credit amount'])
+    plt.xlabel('Generation')
+    plt.ylabel('Credit Amount')
+    plt.title('Credit Amount vs Generation')
+    plt.savefig('exports/charts/temp_chart.png', bbox_inches='tight')
+    plt.close()
+    
+    # Output
+    return {"type": "plot", "value": "exports/charts/temp_chart.png"}
+
+# Declare a result variable
+result = analyze_data(dfs)
+                    ```
+                
+2023-09-18 01:02:34 [INFO] 
+Code running:
+```
+def analyze_data(dfs: list[pd.DataFrame]) ->dict:
+    df = dfs[0]
+    df['Generation'] = df['Generation'].str.replace('+', '')
+    grouped_df = df.groupby('Generation')['Credit amount'].mean().reset_index()
+    plt.figure(figsize=(10, 6))
+    plt.bar(grouped_df['Generation'], grouped_df['Credit amount'])
+    plt.xlabel('Generation')
+    plt.ylabel('Credit Amount')
+    plt.title('Credit Amount vs Generation')
+    plt.savefig('exports/charts/temp_chart.png', bbox_inches='tight')
+    plt.close()
+    return {'type': 'plot', 'value': 'exports/charts/temp_chart.png'}
+
+
+result = analyze_data(dfs)
+        ```
+2023-09-18 01:02:34 [INFO] Answer: {'type': 'plot', 'value': 'exports/charts/temp_chart.png'}
+2023-09-18 01:02:34 [INFO] Executed in: 0.3745863437652588s
+2023-09-18 01:06:08 [INFO] Question: create a chart of credit amount versus generation.
+2023-09-18 01:06:08 [INFO] Running PandasAI with openai LLM...
+2023-09-18 01:06:08 [INFO] Prompt ID: 2d7665ba-6dee-4836-a5b9-f11cd954e1a3
+2023-09-18 01:06:21 [INFO] 
+                    Code generated:
+                    ```
+                    # TODO import all the dependencies required
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Analyze the data
+# 1. Prepare: Preprocessing and cleaning data if necessary
+# 2. Process: Manipulating data for analysis (grouping, filtering, aggregating, etc.)
+# 3. Analyze: Conducting the actual analysis (if the user asks to create a chart save it to an image in exports/charts/temp_chart.png and do not show the chart.)
+# 4. Output: return a dictionary of:
+# - type (possible values "text", "number", "dataframe", "plot")
+# - value (can be a string, a dataframe or the path of the plot, NOT a dictionary)
+# Example output: { "type": "text", "value": "The average loan amount is $15,000." }
+def analyze_data(dfs: list[pd.DataFrame]) -> dict:
+    # Code goes here (do not add comments)
+    df = dfs[0]
+    
+    # Prepare: No preprocessing or cleaning necessary
+    
+    # Process: Grouping data by generation and calculating the average credit amount
+    grouped_df = df.groupby('Generation')['Credit amount'].mean().reset_index()
+    
+    # Analyze: Creating a bar chart of credit amount versus generation
+    plt.bar(grouped_df['Generation'], grouped_df['Credit amount'])
+    plt.xlabel('Generation')
+    plt.ylabel('Credit Amount')
+    plt.title('Credit Amount vs Generation')
+    plt.savefig('exports/charts/temp_chart.png')
+    plt.close()
+    
+    # Output: Return the path of the plot
+    return {"type": "plot", "value": "exports/charts/temp_chart.png"}
+
+# Declare a result variable
+result = analyze_data(dfs)
+                    ```
+                
+2023-09-18 01:06:21 [INFO] 
+Code running:
+```
+def analyze_data(dfs: list[pd.DataFrame]) ->dict:
+    df = dfs[0]
+    grouped_df = df.groupby('Generation')['Credit amount'].mean().reset_index()
+    plt.bar(grouped_df['Generation'], grouped_df['Credit amount'])
+    plt.xlabel('Generation')
+    plt.ylabel('Credit Amount')
+    plt.title('Credit Amount vs Generation')
+    plt.savefig('exports/charts/temp_chart.png')
+    plt.close()
+    return {'type': 'plot', 'value': 'exports/charts/temp_chart.png'}
+
+
+result = analyze_data(dfs)
+        ```
+2023-09-18 01:06:21 [INFO] Answer: {'type': 'plot', 'value': 'exports/charts/temp_chart.png'}
+2023-09-18 01:06:21 [INFO] Executed in: 13.508412599563599s
+2023-09-18 02:14:10 [INFO] Loading faiss with AVX2 support.
+2023-09-18 02:14:10 [INFO] Could not load library with AVX2 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx2'")
+2023-09-18 02:14:10 [INFO] Loading faiss.
+2023-09-18 02:14:10 [INFO] Successfully loaded faiss.
