@@ -261,6 +261,30 @@ def Table_creation(df):
         Final_table = Final_table.head(5)
         return Final_table
 
+def bau_report()-> None:
+    # Function call : dispalay regular BAU analysis
+    df = st.session_state['df']
+
+    # resetting the date column
+    df["Date"] = pd.to_datetime(df["Date"])
+    st.session_state['df'] =df
+
+    Table = Table_creation(st.session_state['df'])
+    
+    st.subheader("Summary Report:")
+    cola, colb, colc = st.columns(3)
+    cola.metric("Total Spend", '$ {:10,d}'.format(df["Spend"].sum()))
+    colb.metric("Total Credit", '# {:10,d}'.format(df["Credit amount"].sum()))
+    colc.metric("Total Redemption",'# {:10,d}'.format(df["Redemption"].sum()))
+    st.write("Merchant Performance:")
+    num1 , num2 = st.columns(2)
+    num1.dataframe(Table)
+    Table.reset_index(inplace=True)
+    num2.line_chart(Table,x= 'Merchant',y = ['Spend','Credit amount'],)#color = ["#E3242B","#1E2F97"])
+    spend = df.groupby("Date")['Spend'].sum().reset_index()
+    spend.sort_values("Date",inplace=True)
+    st.write("Month Wise:")
+    st.line_chart(spend,x='Date',y='Spend')
 
 # page setting configuration
 page_configuration()
@@ -304,29 +328,8 @@ with col1 :
                 display_uploaded_data_info()
 
             with st.expander("BAU Report"):
-                # Function call : dispalay regular BAU analysis
-                df = st.session_state['df']
-
-                # resetting the date column
-                df["Date"] = pd.to_datetime(df["Date"])
-                st.session_state['df'] =df
-
-                Table = Table_creation(st.session_state['df'])
+                bau_report()
                 
-                st.subheader("Summary Report:")
-                cola, colb, colc = st.columns(3)
-                cola.metric("Total Spend", '$ {:10,d}'.format(df["Spend"].sum()))
-                colb.metric("Total Credit", '# {:10,d}'.format(df["Credit amount"].sum()))
-                colc.metric("Total Redemption",'# {:10,d}'.format(df["Redemption"].sum()))
-                st.write("Merchant Performance:")
-                num1 , num2 = st.columns(2)
-                num1.dataframe(Table)
-                Table.reset_index(inplace=True)
-                num2.line_chart(Table,x= 'Merchant',y = ['Spend','Credit amount'],)#color = ["#E3242B","#1E2F97"])
-                spend = df.groupby("Date")['Spend'].sum().reset_index()
-                spend.sort_values("Date",inplace=True)
-                st.write("Month Wise:")
-                st.line_chart(spend,x='Date',y='Spend')
         else:
 
             st.error("Kindly Upload your file!")
