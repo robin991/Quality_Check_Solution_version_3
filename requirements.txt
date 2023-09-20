@@ -8,3 +8,4 @@ streamlit_chat
 bs4
 tiktoken
 faiss-cpu
+PyPDF2
