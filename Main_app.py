@@ -24,6 +24,11 @@ from langchain.vectorstores import FAISS
 #from langchain.llms import CTransformers
 from langchain.chains import ConversationalRetrievalChain 
 
+# for pdf reader
+from PyPDF2 import PdfReader
+from langchain.text_splitter import CharacterTextSplitter
+#from typing_extensions import Concatenate
+
 def page_configuration() -> None:
     st.set_page_config(
     page_title = "RIO-GPT",
@@ -59,6 +64,10 @@ def initialize_session_state() -> None:
     if 'past' not in st.session_state:
         st.session_state['past'] = ['Hey! ']
 
+    # session state for pdf reader
+    if 'raw_text' not in st.session_state:
+        st.session_state['raw_text'] = ""
+
 def clear_chat() -> None:
     '''
     This function will execute when clear button is clicked
@@ -72,14 +81,25 @@ def clear_chat() -> None:
 
 def read_file(file_name : str) -> pd.DataFrame: 
     # Function to read file and return and dataframe and Fileuploader object
-    df_uploader = st.file_uploader("✳️Upload your file here", type = ['xlsx','csv'],accept_multiple_files=False)
+    df_uploader = st.file_uploader("✳️Upload your file here", type = ['xlsx','csv','pdf'],accept_multiple_files=False)
 
     if df_uploader is not None :
 
-        if df_uploader.name[-3:] == 'csv':
+        # getting the extension
+        file_extension = os.path.splitext(df_uploader.name)[1]
+
+        if file_extension == '.csv':
             df = pd.read_csv(df_uploader)
-        elif df_uploader.name[-3:] == 'xlsx': 
+        elif file_extension == '.xlsx': 
             df = pd.read_excel(df_uploader)
+        elif file_extension == '.pdf':
+            pdf_reader = PdfReader(df_uploader)
+            raw_text =""
+            for page in pdf_reader.pages:
+                raw_text += page.extract_text()
+                       
+            return raw_text, df_uploader
+
         else :
             pass # saving this for pdf in future
 
@@ -249,6 +269,10 @@ def chat_bot_llangchain_openapi(uploaded_file) -> None:
                 message(st.session_state["generated"][i],
                         key = str(i) ,
                         avatar_style = "thumbs")
+                
+def chat_bot_llangchain_openapi(uploaded_file):
+    pass
+
 #@st.cache_data
 def Table_creation(df):
         
@@ -305,7 +329,7 @@ col1, col2 = st.columns(2)
 
 with col1 :
     # choose solution
-    choose_option = st.selectbox("***Choose chat solution:***", ('Chat with excel(Single query)', 'Chat with excel(Conversation Chain)'))
+    choose_option = st.selectbox("***Choose chat solution:***", ('Chat with excel(Single query)', 'Chat with excel(Conversation Chain)','Chat with pdf'))
 
     
     
@@ -333,12 +357,24 @@ with col1 :
         else:
 
             st.error("Kindly Upload your file!")
+
+    elif choose_option == 'Chat with pdf':
+        st.session_state['raw_text'],st.session_state['File_uploader_object'] = read_file(file_name = "File1")
+        if len(st.session_state['raw_text']) != 0 :
+            with st.expander("Data Display"):
+                st.write(st.session_state['raw_text'])
+            with st.expander("Data Description"):
+                # Function call : display basic details regarding the dataset
+                pass
+                
+
 with col2 :
     
     if not st.session_state['df'].empty and choose_option == 'Chat with excel(Single query)':
         chat_bot_Pandasai_api()
     elif not st.session_state['df'].empty and choose_option == 'Chat with excel(Conversation Chain)':
         chat_bot_llangchain_openapi(st.session_state['File_uploader_object'])
-    
+    elif len(st.session_state['raw_text']) != 0  and choose_option == 'Chat with pdf':
+        st.write('Chat Here')
 
     
