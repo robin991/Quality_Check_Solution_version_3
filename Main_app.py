@@ -59,7 +59,8 @@ def initialize_session_state() -> None:
         st.session_state['history'] = []
 
     if 'generated' not in st.session_state:
-        st.session_state['generated'] = ['Hi I am Rio GPT. Your friendly neighbourhood genrative-AI powered conversational assistant.']
+        
+        st.session_state['generated'] = ['Hi I am Rio GPT. Your friendly neighbourhood genrative-AI powered conversational assistant. I am still in development mode. \n You can simply ask questions to your data in a natural language and I will try to answer it.😊']
     
     if 'past' not in st.session_state:
         st.session_state['past'] = ['Hey! ']
@@ -74,9 +75,8 @@ def clear_chat() -> None:
     '''
     st.session_state['history'] = []
 
-    
-    st.session_state['generated'] = ['Hi I am Rio GPT. Your friendly neighbourhood genrative-AI powered conversational assistant.']
-    
+    st.session_state['generated'] = ['Hi I am Rio GPT. Your friendly neighbourhood genrative-AI powered conversational assistant. I am still in development mode. \n You can simply ask questions to your data in a natural language and I will try to answer it.😊']
+        
     st.session_state['past'] = ['Hey!']
 
 def read_file(file_name : str) -> pd.DataFrame: 
@@ -104,8 +104,10 @@ def read_file(file_name : str) -> pd.DataFrame:
             pass # saving this for pdf in future
 
         st.session_state['df'] = df
+        
         return st.session_state['df'], df_uploader
     else:
+        
         return pd.DataFrame(), None
 
 def get_df_info(df):
@@ -188,6 +190,7 @@ def chat_bot_Pandasai_api() -> None:
 
 def chat_bot_llangchain_openapi(uploaded_file) -> None:
 
+    
     DB_FAISS_PATH = "vectorestore/db_faiss"
 
     check_file = os.path.isfile('.env')
@@ -270,7 +273,7 @@ def chat_bot_llangchain_openapi(uploaded_file) -> None:
                         key = str(i) ,
                         avatar_style = "thumbs")
                 
-def chat_bot_llangchain_openapi(uploaded_file):
+def chat_bot_llangchain_openapi_pdf(uploaded_file):
     pass
 
 #@st.cache_data
@@ -373,7 +376,9 @@ with col2 :
     if not st.session_state['df'].empty and choose_option == 'Chat with excel(Single query)':
         chat_bot_Pandasai_api()
     elif not st.session_state['df'].empty and choose_option == 'Chat with excel(Conversation Chain)':
+        
         chat_bot_llangchain_openapi(st.session_state['File_uploader_object'])
+        
     elif len(st.session_state['raw_text']) != 0  and choose_option == 'Chat with pdf':
         st.write('Chat Here')
 
