@@ -268,10 +268,10 @@ def chat_bot_llangchain_openapi(uploaded_file) -> None:
                 message(st.session_state["past"][i],
                         is_user = True,
                         key = str(i) + '_user',
-                        avatar_style = "big-smile")
+                        avatar_style = "open-peeps")
                 message(st.session_state["generated"][i],
                         key = str(i) ,
-                        avatar_style = "thumbs")
+                        avatar_style = "identicon")
                 
 def chat_bot_llangchain_openapi_pdf(uploaded_file):
     pass
