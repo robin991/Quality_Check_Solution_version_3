@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd 
 import io
+import json
 
 # for pandas ai
 from pandasai.llm.openai import OpenAI
@@ -27,7 +28,15 @@ from langchain.chains import ConversationalRetrievalChain
 # for pdf reader
 from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
+#from langchain.text_splitter import RecursiveCharacterTextSplitter
 #from typing_extensions import Concatenate
+#import pickle
+#from langchain.callbacks import get_openai_callback
+#from langchain.chains.question_answering import load_qa_chain
+
+from langchain.memory import ConversationBufferMemory
+#from htmlTemplates import css, bot_template, user_template
+
 
 def page_configuration() -> None:
     st.set_page_config(
@@ -69,6 +78,11 @@ def initialize_session_state() -> None:
     if 'raw_text' not in st.session_state:
         st.session_state['raw_text'] = ""
 
+    
+    # new
+    if "conversation" not in st.session_state:
+        st.session_state['conversation'] = None
+
 def clear_chat() -> None:
     '''
     This function will execute when clear button is clicked
@@ -78,6 +92,14 @@ def clear_chat() -> None:
     st.session_state['generated'] = ['Hi I am Rio GPT. Your friendly neighbourhood genrative-AI powered conversational assistant. I am still in development mode. \n You can simply ask questions to your data in a natural language and I will try to answer it.😊']
         
     st.session_state['past'] = ['Hey!']
+
+def download_chat()-> None:
+    '''
+    This funciton will help download th converstaion history
+    '''
+    download_history = json.dumps(st.session_state['history'])
+
+    return download_history
 
 def read_file(file_name : str) -> pd.DataFrame: 
     # Function to read file and return and dataframe and Fileuploader object
@@ -273,8 +295,111 @@ def chat_bot_llangchain_openapi(uploaded_file) -> None:
                         key = str(i) ,
                         avatar_style = "identicon")
                 
-def chat_bot_llangchain_openapi_pdf(uploaded_file):
-    pass
+
+def chat_bot_llangchain_openapi_pdf():
+
+    check_file = os.path.isfile('.env')
+    if check_file:
+        load_dotenv()
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    else:
+        openai_api_key = st.secrets["API_KEY"]
+    
+    text = st.session_state['raw_text']
+    text_splitter = CharacterTextSplitter(
+            separator="\n",
+            chunk_size = 1000,
+            chunk_overlap = 200,
+            length_function = len
+        )
+      
+    chunks = text_splitter.split_text(text=text)
+
+    
+    
+    embeddings = OpenAIEmbeddings(openai_api_key = openai_api_key)
+
+    #Store the chunks part in db (vector)
+    vectorstore = FAISS.from_texts(texts = chunks,embedding=embeddings)
+
+    
+    llm = ChatOpenAI(temperature=0,model_name='gpt-3.5-turbo',openai_api_key=openai_api_key)
+    
+    memory = ConversationBufferMemory(
+        memory_key='chat_history', return_messages=True)
+    conversation_chain = ConversationalRetrievalChain.from_llm(
+        llm=llm,
+        retriever=vectorstore.as_retriever(),
+        memory=memory
+    )
+    
+    # alternate caht interface
+    # st.session_state.conversation = conversation_chain
+    
+    # user_question = st.text_input("Ask a question about your documents:")
+    # if user_question:
+    #     response = st.session_state.conversation({'question': user_question})
+    #     st.write(response)
+
+
+    # builder chat interface
+    response_container = st.container()
+    container = st.container()
+    
+
+    def conversational_chat(query):
+        result = conversation_chain({'question':query, "chat_history" : st.session_state['history']})
+        #st.session_state['history'].append([query, result['answer']])
+        st.session_state['history'].append((query, result['answer']))
+        return result['answer']
+
+    with container:
+        with st.form(key = "my_form", clear_on_submit = True):
+            user_input = st.text_input("Query:", placeholder = "Talk to your CSV Data here", key = 'input')
+
+            submit_buttom = st.form_submit_button(label ='Send')
+        
+        if submit_buttom and user_input:
+            output = conversational_chat(user_input)
+            st.session_state['past'].append(user_input)
+            st.session_state['generated'].append(output)
+        
+        col1,col2 = st.columns([0.2,1])
+        # option to clear chat history
+        with col1: 
+            st.button("Clear Chat", on_click=clear_chat)
+
+        # option to download chat history
+        with col2 :
+            st.download_button(label="Download chat as text",
+                data=download_chat(),
+                file_name='chat_history.txt',
+                mime='text/csv',)
+
+    if st.session_state['generated']:
+        with response_container:
+            for i in range(len(st.session_state['generated'])):
+                message(st.session_state["past"][i],
+                        is_user = True,
+                        key = str(i) + '_user',
+                        avatar_style = "open-peeps")
+                message(st.session_state["generated"][i],
+                        key = str(i) ,
+                        avatar_style = "identicon")
+    
+        # st.session_state.chat_history = response['chat_history']
+
+        # for i, message in enumerate(st.session_state.chat_history):
+        #     if i % 2 == 0:
+        #         st.write(user_template.replace(
+        #             "{{MSG}}", message.content), unsafe_allow_html=True)
+        #     else:
+        #         st.write(bot_template.replace(
+        #             "{{MSG}}", message.content), unsafe_allow_html=True)
+
+    return
+    
 
 #@st.cache_data
 def Table_creation(df):
@@ -294,7 +419,7 @@ def bau_report()-> None:
 
     # resetting the date column
     df["Date"] = pd.to_datetime(df["Date"])
-    st.session_state['df'] =df
+    st.session_state['df'] = df
 
     Table = Table_creation(st.session_state['df'])
     
@@ -332,11 +457,11 @@ col1, col2 = st.columns(2)
 
 with col1 :
     # choose solution
-    choose_option = st.selectbox("***Choose chat solution:***", ('Chat with excel(Single query)', 'Chat with excel(Conversation Chain)','Chat with pdf'))
+    choose_option = st.selectbox("***Choose chat solution:***", ('Chat with csv(Single query)', 'Chat with csv(Conversational Chain)','Chat with pdf'))
 
     
     
-    if choose_option == 'Chat with excel(Single query)' or  choose_option == 'Chat with excel(Conversation Chain)':
+    if choose_option == 'Chat with csv(Single query)' or  choose_option == 'Chat with csv(Conversational Chain)':
 
         #Read file from column  and  File uploader object
         st.session_state['df'],st.session_state['File_uploader_object'] = read_file(file_name = "File1")
@@ -368,18 +493,18 @@ with col1 :
                 st.write(st.session_state['raw_text'])
             with st.expander("Data Description"):
                 # Function call : display basic details regarding the dataset
-                pass
+                st.write('nothing')
                 
 
 with col2 :
     
-    if not st.session_state['df'].empty and choose_option == 'Chat with excel(Single query)':
+    if not st.session_state['df'].empty and choose_option == 'Chat with csv(Single query)':
         chat_bot_Pandasai_api()
-    elif not st.session_state['df'].empty and choose_option == 'Chat with excel(Conversation Chain)':
+    elif not st.session_state['df'].empty and choose_option == 'Chat with csv(Conversational Chain)':
         
         chat_bot_llangchain_openapi(st.session_state['File_uploader_object'])
         
     elif len(st.session_state['raw_text']) != 0  and choose_option == 'Chat with pdf':
-        st.write('Chat Here')
+        chat_bot_llangchain_openapi_pdf()
 
     
