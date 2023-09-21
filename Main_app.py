@@ -297,7 +297,9 @@ def chat_bot_llangchain_openapi(uploaded_file) -> None:
                 
 
 def chat_bot_llangchain_openapi_pdf():
-
+    '''
+    Function to chat with pdf file
+    '''
     check_file = os.path.isfile('.env')
     if check_file:
         load_dotenv()
@@ -494,6 +496,9 @@ with col1 :
             with st.expander("Data Description"):
                 # Function call : display basic details regarding the dataset
                 st.write('nothing')
+        
+        else:
+            st.error("Kindly Upload your file!")
                 
 
 with col2 :
