@@ -25,6 +25,10 @@ from langchain.vectorstores import FAISS
 #from langchain.llms import CTransformers
 from langchain.chains import ConversationalRetrievalChain 
 
+#new
+from langchain.agents import create_csv_agent
+from langchain.llms import OpenAI as openai2
+
 # for pdf reader
 from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
@@ -83,6 +87,11 @@ def initialize_session_state() -> None:
     if "conversation" not in st.session_state:
         st.session_state['conversation'] = None
 
+    #new
+    
+    if "user_question" not in st.session_state:
+        st.session_state['user_question'] = None
+
 def clear_chat() -> None:
     '''
     This function will execute when clear button is clicked
@@ -101,9 +110,9 @@ def download_chat()-> None:
 
     return download_history
 
-def read_file(file_name : str) -> pd.DataFrame: 
+def read_file() -> pd.DataFrame: 
     # Function to read file and return and dataframe and Fileuploader object
-    df_uploader = st.file_uploader("✳️Upload your file here", type = ['xlsx','csv','pdf'],accept_multiple_files=False)
+    df_uploader = st.file_uploader("✳️Upload your file here", type = ['csv','pdf'],accept_multiple_files=False)
 
     if df_uploader is not None :
 
@@ -111,6 +120,7 @@ def read_file(file_name : str) -> pd.DataFrame:
         file_extension = os.path.splitext(df_uploader.name)[1]
 
         if file_extension == '.csv':
+            df_uploader.seek(0)
             df = pd.read_csv(df_uploader)
         elif file_extension == '.xlsx': 
             df = pd.read_excel(df_uploader)
@@ -210,7 +220,7 @@ def chat_bot_Pandasai_api() -> None:
 
     return None 
 
-def chat_bot_llangchain_openapi(uploaded_file) -> None:
+def chat_bot_llangchain_openapi_csv(uploaded_file) -> None:
 
     
     DB_FAISS_PATH = "vectorestore/db_faiss"
@@ -294,7 +304,80 @@ def chat_bot_llangchain_openapi(uploaded_file) -> None:
                 message(st.session_state["generated"][i],
                         key = str(i) ,
                         avatar_style = "identicon")
-                
+  
+def chat_bot_llangchain_openapi_csv2(uploaded_file) -> None:
+    ''''
+    building a sample
+    '''
+    
+    check_file = os.path.isfile('.env')
+
+    # checking API Key info ( for both local run and for streamlit)
+    if check_file:
+        load_dotenv()
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    else:
+        openai_api_key = st.secrets["API_KEY"]
+    
+    # create a temporary file object
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        tmp_file.write(uploaded_file.getvalue())
+        tmp_file_path = tmp_file.name
+
+    llm = openai2(temperature = 0, openai_api_key = openai_api_key)
+
+    
+    agent = create_csv_agent(llm, tmp_file_path,verbose=True)
+
+    # user_question = st.text_input ("Ask a question about your CSV:")
+
+    # if user_question is not None and user_question != "":
+    #     response = agent.run(user_question)
+    #     st.write(response)
+
+    def conversational_chat(query):
+        result = agent.run(query)
+        #st.session_state['history'].append([query, result['answer']])
+        st.session_state['history'].append((query, result))
+        return result
+    # builder chat interface
+    response_container = st.container()
+    container = st.container()
+    with container:
+        with st.form(key = "my_form", clear_on_submit = True):
+            user_input = st.text_input("Query:", placeholder = "Talk to your CSV Data here", key = 'input')
+
+            submit_buttom = st.form_submit_button(label ='Send')
+        
+        if submit_buttom and user_input:
+            output = conversational_chat(user_input)
+            st.session_state['past'].append(user_input)
+            st.session_state['generated'].append(output)
+        
+        col1,col2 = st.columns([0.2,1])
+        # option to clear chat history
+        with col1: 
+            st.button("Clear Chat", on_click=clear_chat)
+
+        # option to download chat history
+        with col2 :
+            st.download_button(label="Download chat as text",
+                data=download_chat(),
+                file_name='chat_history.txt',
+                mime='text/csv',)
+
+    if st.session_state['generated']:
+        with response_container:
+            for i in range(len(st.session_state['generated'])):
+                message(st.session_state["past"][i],
+                        is_user = True,
+                        key = str(i) + '_user',
+                        avatar_style = "open-peeps")
+                message(st.session_state["generated"][i],
+                        key = str(i) ,
+                        avatar_style = "identicon")
+              
 
 def chat_bot_llangchain_openapi_pdf():
     '''
@@ -415,6 +498,7 @@ def Table_creation(df):
         Final_table = Final_table.head(5)
         return Final_table
 
+
 def bau_report()-> None:
     # Function call : dispalay regular BAU analysis
     df = st.session_state['df']
@@ -440,76 +524,82 @@ def bau_report()-> None:
     st.write("Month Wise:")
     st.line_chart(spend,x='Date',y='Spend')
 
-# page setting configuration
-page_configuration()
+def main():
+
+    # page setting configuration
+    page_configuration()
 
 
-#initializing session state variables
-initialize_session_state()
+    #initializing session state variables
+    initialize_session_state()
 
-# adding page title
-st.markdown("<h1 style='text-align: center; color: Black;'>RIO-GPT</h1>", unsafe_allow_html=True)
+    # adding page title
+    st.markdown("<h1 style='text-align: center; color: Black;'>RIO-GPT</h1>", unsafe_allow_html=True)
 
-st.markdown("<h3 style='text-align: center; color: Black;'>Our friendly neighbourhood chat bot ready to assit RIO whenever there is a need of support.</h3>", unsafe_allow_html=True)
-# subheader
-#st.subheader( 'Our friendly neighbourhood chat bot ready to assit RIO whenever there is a need of support.',
+    st.markdown("<h3 style='text-align: center; color: Black;'>Our friendly neighbourhood chat bot ready to assit RIO whenever there is a need of support.</h3>", unsafe_allow_html=True)
+    # subheader
+    #st.subheader( 'Our friendly neighbourhood chat bot ready to assit RIO whenever there is a need of support.',
+                
+    st.divider()
+    col1, col2 = st.columns(2)
+
+    with col1 :
+        # choose solution
+        choose_option = st.selectbox("***Choose chat solution:***", ('Chat with csv(Single query)', 'Chat with csv(Conversational Chain)','Chat with pdf'))
+
+        
+        
+        if choose_option == 'Chat with csv(Single query)' or  choose_option == 'Chat with csv(Conversational Chain)':
+
+            #Read file from column  and  File uploader object
+            st.session_state['df'],st.session_state['File_uploader_object'] = read_file()
+
+            if not st.session_state['df'].empty:
             
-st.divider()
-col1, col2 = st.columns(2)
+                # assign to session state
+                uploaded_file = st.session_state['File_uploader_object']
 
-with col1 :
-    # choose solution
-    choose_option = st.selectbox("***Choose chat solution:***", ('Chat with csv(Single query)', 'Chat with csv(Conversational Chain)','Chat with pdf'))
+                with st.expander('Data Display'):
+                    # Function call : display uploaded file on application
+                    display_uploaded_data()
 
-    
-    
-    if choose_option == 'Chat with csv(Single query)' or  choose_option == 'Chat with csv(Conversational Chain)':
+                with st.expander("Data Description"):
+                    # Function call : display basic details regarding the dataset
+                    display_uploaded_data_info()
 
-        #Read file from column  and  File uploader object
-        st.session_state['df'],st.session_state['File_uploader_object'] = read_file(file_name = "File1")
+                with st.expander("BAU Report"):
+                    bau_report()
+                    
+            else:
 
-        if not st.session_state['df'].empty:
-          
-            # assign to session state
-            uploaded_file = st.session_state['File_uploader_object']
+                st.error("Kindly Upload your file!")
 
-            with st.expander('Data Display'):
-                # Function call : display uploaded file on application
-                display_uploaded_data()
+        elif choose_option == 'Chat with pdf':
+            st.session_state['raw_text'],st.session_state['File_uploader_object'] = read_file()
+            if len(st.session_state['raw_text']) != 0 :
+                with st.expander("Data Display"):
+                    st.write(st.session_state['raw_text'])
+                with st.expander("Data Description"):
+                    # Function call : display basic details regarding the dataset
+                    st.write('nothing')
+            
+            else:
+                st.error("Kindly Upload your file!")
+                    
 
-            with st.expander("Data Description"):
-                # Function call : display basic details regarding the dataset
-                display_uploaded_data_info()
-
-            with st.expander("BAU Report"):
-                bau_report()
-                
-        else:
-
-            st.error("Kindly Upload your file!")
-
-    elif choose_option == 'Chat with pdf':
-        st.session_state['raw_text'],st.session_state['File_uploader_object'] = read_file(file_name = "File1")
-        if len(st.session_state['raw_text']) != 0 :
-            with st.expander("Data Display"):
-                st.write(st.session_state['raw_text'])
-            with st.expander("Data Description"):
-                # Function call : display basic details regarding the dataset
-                st.write('nothing')
+    with col2 :
         
-        else:
-            st.error("Kindly Upload your file!")
-                
+        if not st.session_state['df'].empty and choose_option == 'Chat with csv(Single query)':
+            chat_bot_Pandasai_api()
+        elif not st.session_state['df'].empty and choose_option == 'Chat with csv(Conversational Chain)':
+            
+            chat_bot_llangchain_openapi_csv2(st.session_state['File_uploader_object'])
+            
+        elif len(st.session_state['raw_text']) != 0  and choose_option == 'Chat with pdf':
+            chat_bot_llangchain_openapi_pdf()
 
-with col2 :
-    
-    if not st.session_state['df'].empty and choose_option == 'Chat with csv(Single query)':
-        chat_bot_Pandasai_api()
-    elif not st.session_state['df'].empty and choose_option == 'Chat with csv(Conversational Chain)':
-        
-        chat_bot_llangchain_openapi(st.session_state['File_uploader_object'])
-        
-    elif len(st.session_state['raw_text']) != 0  and choose_option == 'Chat with pdf':
-        chat_bot_llangchain_openapi_pdf()
+
+if __name__ == "__main__":
+    main()
 
     
