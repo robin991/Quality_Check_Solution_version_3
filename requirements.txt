@@ -13,3 +13,4 @@ tabulate
 moviepy
 openai-whisper
 numpy==1.25
+ffmpeg
