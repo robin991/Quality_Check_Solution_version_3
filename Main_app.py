@@ -41,6 +41,9 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.memory import ConversationBufferMemory
 #from htmlTemplates import css, bot_template, user_template
 
+# for video
+from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_audio
+import whisper
 
 def page_configuration() -> None:
     st.set_page_config(
@@ -112,7 +115,7 @@ def download_chat()-> None:
 
 def read_file() -> pd.DataFrame: 
     # Function to read file and return and dataframe and Fileuploader object
-    df_uploader = st.file_uploader("✳️Upload your file here", type = ['csv','pdf'],accept_multiple_files=False)
+    df_uploader = st.file_uploader("✳️Upload your file here", type = ['csv','pdf','mp4'],accept_multiple_files=False)
 
     if df_uploader is not None :
 
@@ -131,7 +134,26 @@ def read_file() -> pd.DataFrame:
                 raw_text += page.extract_text()
                        
             return raw_text, df_uploader
+        elif file_extension == '.mp4':
+            temp_file_1 = tempfile.NamedTemporaryFile(delete=False,suffix='.mp4')
+            temp_file_1.write(df_uploader.getbuffer())
+            # extracting the audio
+            audio_file = "audio.mp3"
+            x = ffmpeg_extract_audio(temp_file_1.name, audio_file)
+            # audio to transcript
+            model = whisper.load_model("base")
+            st.video(temp_file_1.name)
+            st.audio(audio_file)
 
+            #fileexists = os.path.isfile(audio_file)
+            #st.write(fileexists)
+            st.write(audio_file)
+            
+            st.write(audio_file)
+            result = model.transcribe(audio_file)
+            st.write(result["text"])
+            raw_text = result["text"]
+            return raw_text, df_uploader
         else :
             pass # saving this for pdf in future
 
@@ -485,7 +507,111 @@ def chat_bot_llangchain_openapi_pdf():
 
     return
     
+def chat_bot_llangchain_openapi_video():
+    '''
+    Function to chat with pdf file
+    '''
+    check_file = os.path.isfile('.env')
+    if check_file:
+        load_dotenv()
+        openai_api_key = os.getenv("OPENAI_API_KEY")
 
+    else:
+        openai_api_key = st.secrets["API_KEY"]
+    
+    text = st.session_state['raw_text']
+    text_splitter = CharacterTextSplitter(
+            separator="\n",
+            chunk_size = 1000,
+            chunk_overlap = 200,
+            length_function = len
+        )
+      
+    chunks = text_splitter.split_text(text=text)
+
+    
+    
+    embeddings = OpenAIEmbeddings(openai_api_key = openai_api_key)
+
+    #Store the chunks part in db (vector)
+    vectorstore = FAISS.from_texts(texts = chunks,embedding=embeddings)
+
+    
+    llm = ChatOpenAI(temperature=0,model_name='gpt-3.5-turbo',openai_api_key=openai_api_key)
+    
+    memory = ConversationBufferMemory(
+        memory_key='chat_history', return_messages=True)
+    conversation_chain = ConversationalRetrievalChain.from_llm(
+        llm=llm,
+        retriever=vectorstore.as_retriever(),
+        memory=memory
+    )
+    
+    # alternate caht interface
+    # st.session_state.conversation = conversation_chain
+    
+    # user_question = st.text_input("Ask a question about your documents:")
+    # if user_question:
+    #     response = st.session_state.conversation({'question': user_question})
+    #     st.write(response)
+
+
+    # builder chat interface
+    response_container = st.container()
+    container = st.container()
+    
+
+    def conversational_chat(query):
+        result = conversation_chain({'question':query, "chat_history" : st.session_state['history']})
+        #st.session_state['history'].append([query, result['answer']])
+        st.session_state['history'].append((query, result['answer']))
+        return result['answer']
+
+    with container:
+        with st.form(key = "my_form", clear_on_submit = True):
+            user_input = st.text_input("Query:", placeholder = "Talk to your CSV Data here", key = 'input')
+
+            submit_buttom = st.form_submit_button(label ='Send')
+        
+        if submit_buttom and user_input:
+            output = conversational_chat(user_input)
+            st.session_state['past'].append(user_input)
+            st.session_state['generated'].append(output)
+        
+        col1,col2 = st.columns([0.2,1])
+        # option to clear chat history
+        with col1: 
+            st.button("Clear Chat", on_click=clear_chat)
+
+        # option to download chat history
+        with col2 :
+            st.download_button(label="Download chat as text",
+                data=download_chat(),
+                file_name='chat_history.txt',
+                mime='text/csv',)
+
+    if st.session_state['generated']:
+        with response_container:
+            for i in range(len(st.session_state['generated'])):
+                message(st.session_state["past"][i],
+                        is_user = True,
+                        key = str(i) + '_user',
+                        avatar_style = "open-peeps")
+                message(st.session_state["generated"][i],
+                        key = str(i) ,
+                        avatar_style = "identicon")
+    
+        # st.session_state.chat_history = response['chat_history']
+
+        # for i, message in enumerate(st.session_state.chat_history):
+        #     if i % 2 == 0:
+        #         st.write(user_template.replace(
+        #             "{{MSG}}", message.content), unsafe_allow_html=True)
+        #     else:
+        #         st.write(bot_template.replace(
+        #             "{{MSG}}", message.content), unsafe_allow_html=True)
+
+    return
 #@st.cache_data
 def Table_creation(df):
         
@@ -536,7 +662,7 @@ def main():
     # adding page title
     st.markdown("<h1 style='text-align: center; color: Black;'>RIO-GPT</h1>", unsafe_allow_html=True)
 
-    st.markdown("<h3 style='text-align: center; color: Black;'>Our friendly neighbourhood chat bot ready to assit RIO whenever there is a need of support.</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: Black;'>Your friendly neighbourhood generative-AI powered conversational assistant.</h3>", unsafe_allow_html=True)
     # subheader
     #st.subheader( 'Our friendly neighbourhood chat bot ready to assit RIO whenever there is a need of support.',
                 
@@ -545,7 +671,7 @@ def main():
 
     with col1 :
         # choose solution
-        choose_option = st.selectbox("***Choose chat solution:***", ('Chat with csv(Single query)', 'Chat with csv(Conversational Chain)','Chat with pdf'))
+        choose_option = st.selectbox("***Choose chat solution:***", ('Chat with csv(Single query)', 'Chat with csv(Conversational Chain)','Chat with pdf','Chat with video'))
 
         
         
@@ -575,6 +701,18 @@ def main():
                 st.error("Kindly Upload your file!")
 
         elif choose_option == 'Chat with pdf':
+            st.session_state['raw_text'],st.session_state['File_uploader_object'] = read_file()
+            if len(st.session_state['raw_text']) != 0 :
+                with st.expander("Data Display"):
+                    st.write(st.session_state['raw_text'])
+                with st.expander("Data Description"):
+                    # Function call : display basic details regarding the dataset
+                    st.write('nothing')
+            
+            else:
+                st.error("Kindly Upload your file!")
+            
+        elif choose_option == 'Chat with video':
             st.session_state['raw_text'],st.session_state['File_uploader_object'] = read_file()
             if len(st.session_state['raw_text']) != 0 :
                 with st.expander("Data Display"):

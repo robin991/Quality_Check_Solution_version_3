@@ -10,3 +10,6 @@ tiktoken
 faiss-cpu
 PyPDF2
 tabulate
+moviepy
+openai-whisper
+numpy==1.25
