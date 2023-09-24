@@ -84,6 +84,8 @@ def initialize_session_state() -> None:
     # session state for pdf reader
     if 'raw_text' not in st.session_state:
         st.session_state['raw_text'] = ""
+    
+    
 
     
     # new
@@ -94,6 +96,14 @@ def initialize_session_state() -> None:
     
     if "user_question" not in st.session_state:
         st.session_state['user_question'] = None
+
+    #video
+    if "temp_video_file" not in st.session_state:
+        st.session_state['temp_video_file'] = None
+
+    if 'raw_video_text' not in st.session_state:
+        st.session_state['raw_video_text'] = ""
+
 
 def clear_chat() -> None:
     '''
@@ -135,25 +145,8 @@ def read_file() -> pd.DataFrame:
                        
             return raw_text, df_uploader
         elif file_extension == '.mp4':
-            temp_file_1 = tempfile.NamedTemporaryFile(delete=False,suffix='.mp4')
-            temp_file_1.write(df_uploader.getbuffer())
-            # extracting the audio
-            audio_file = "audio.mp3"
-            ffmpeg_extract_audio(temp_file_1.name, audio_file)
-            # audio to transcript
-            model = whisper.load_model("base")
-            st.video(temp_file_1.name)
-            st.audio(audio_file)
-
-            #fileexists = os.path.isfile(audio_file)
-            #st.write(fileexists)
-            st.write(audio_file)
-            
-            st.write(audio_file)
-            result = model.transcribe(audio_file)
-            st.write(result["text"])
-            raw_text = result["text"]
-            return raw_text, df_uploader
+            raw__video_text = video_to_audio_to_text(df_uploader)
+            return raw__video_text, df_uploader
         else :
             pass # saving this for pdf in future
 
@@ -163,6 +156,29 @@ def read_file() -> pd.DataFrame:
     else:
         
         return pd.DataFrame(), None
+
+def video_to_audio_to_text(df_uploader)->str:
+
+    # creating a temp firle for video
+    temp_video_file = tempfile.NamedTemporaryFile(delete=False,suffix='.mp4')
+    temp_video_file.write(df_uploader.getbuffer())
+    # extracting the audio
+    audio_file = "audio.mp3"
+    ffmpeg_extract_audio(temp_video_file.name, audio_file)
+    # audio to transcript model
+    model = whisper.load_model("base")
+
+    # saving video to session state
+    st.session_state['temp_video_file'] = temp_video_file
+    
+    #st.audio(audio_file)
+
+    #fileexists = os.path.isfile(audio_file)
+    #st.write(fileexists)
+
+    # transcribe audio to text
+    result = model.transcribe(audio_file)
+    return result["text"]
 
 def get_df_info(df):
     '''
@@ -519,7 +535,7 @@ def chat_bot_llangchain_openapi_video():
     else:
         openai_api_key = st.secrets["API_KEY"]
     
-    text = st.session_state['raw_text']
+    text = st.session_state['raw_video_text']
     text_splitter = CharacterTextSplitter(
             separator="\n",
             chunk_size = 1000,
@@ -713,10 +729,13 @@ def main():
                 st.error("Kindly Upload your file!")
             
         elif choose_option == 'Chat with video':
-            st.session_state['raw_text'],st.session_state['File_uploader_object'] = read_file()
-            if len(st.session_state['raw_text']) != 0 :
+            st.session_state['raw_video_text'],st.session_state['File_uploader_object'] = read_file()
+            if len(st.session_state['raw_video_text']) != 0 :
                 with st.expander("Data Display"):
-                    st.write(st.session_state['raw_text'])
+                    st.video(st.session_state['temp_video_file'].name)
+
+                    st.subheader("Transcript:")
+                    st.write(st.session_state['raw_video_text'])
                 with st.expander("Data Description"):
                     # Function call : display basic details regarding the dataset
                     st.write('nothing')
@@ -735,6 +754,9 @@ def main():
             
         elif len(st.session_state['raw_text']) != 0  and choose_option == 'Chat with pdf':
             chat_bot_llangchain_openapi_pdf()
+
+        elif len(st.session_state['raw_video_text']) != 0  and choose_option == 'Chat with video':
+            chat_bot_llangchain_openapi_video()
 
 
 if __name__ == "__main__":
