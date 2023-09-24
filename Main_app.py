@@ -139,7 +139,7 @@ def read_file() -> pd.DataFrame:
             temp_file_1.write(df_uploader.getbuffer())
             # extracting the audio
             audio_file = "audio.mp3"
-            x = ffmpeg_extract_audio(temp_file_1.name, audio_file)
+            ffmpeg_extract_audio(temp_file_1.name, audio_file)
             # audio to transcript
             model = whisper.load_model("base")
             st.video(temp_file_1.name)
