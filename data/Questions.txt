@@ -1,0 +1,15 @@
+CSV:
+
+Q1 : Which two merchants have the highest total Spend values? Give me name and value in bullet points.
+
+Q2: Which month shows highest total Spend value?
+
+Q3: What is percentage contribution of highest spending merchant aggregate by total spend out of all the merchants?
+
+
+pdf 
+Q1: Explain marketing opportunities with american express as mentiones in the document. Answer in bullet points.
+
+video
+
+Q1: Give me important metrics for marketing from this document. Give me answer in bullet points.
